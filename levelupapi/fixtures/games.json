@@ -1,0 +1,26 @@
+[
+    {
+        "model": "levelupapi.game",
+        "pk": 1,
+        "fields": {
+            "game_type": 1,
+            "title": "Go",
+            "maker": "Parker Brothers",
+            "gamer": 1,
+            "number_of_players": 2,
+            "skill_level": "Novice-Advanced"
+        }
+    },
+    {
+        "model": "levelupapi.game",
+        "pk": 2,
+        "fields": {
+            "game_type": 2,
+            "title": "D&D",
+            "maker": "Children",
+            "gamer": 1,
+            "number_of_players": 2,
+            "skill_level": "Novice-Advanced"
+        }
+    }
+]
