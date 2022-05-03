@@ -6,6 +6,7 @@ from rest_framework import serializers, status
 from levelupapi.models import Game
 from levelupapi.models.game_type import GameType
 from levelupapi.models.gamer import Gamer
+from django.core.exceptions import ValidationError
 
 class GameView(ViewSet):
     """Level up game view"""
@@ -46,19 +47,30 @@ class GameView(ViewSet):
             Response -- JSON serialized game instance
         """
         gamer = Gamer.objects.get(user=request.auth.user)
-        game_type = GameType.objects.get(pk=request.data["game_type"])
-
-        game = Game.objects.create(
-            title=request.data["title"],
-            maker=request.data["maker"],
-            number_of_players=request.data["number_of_players"],
-            skill_level=request.data["skill_level"],
-            gamer=gamer,
-            game_type=game_type
-        )
-        serializer = GameSerializer(game)
-        return Response(serializer.data)
+        # game_type_id = request.data.game_type
+        serializer = CreateGameSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(gamer=gamer)
+        # serializer.save(game_type_id=game_type_id)
+        # game = Game.objects.create(
+        #     title=request.data["title"],
+        #     maker=request.data["maker"],
+        #     number_of_players=request.data["number_of_players"],
+        #     skill_level=request.data["skill_level"],
+        #     gamer=gamer,
+        #     game_type=game_type
+        # )
+        # serializer = GameSerializer(game)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
     
+class CreateGameSerializer(serializers.ModelSerializer):
+    """JSON serializer for games
+    """
+    
+    class Meta:
+        model = Game
+        fields = ('id', 'title', 'maker', 'number_of_players', 'skill_level', 'game_type')
+
 class GameSerializer(serializers.ModelSerializer):
     """JSON serializer for games
     """
@@ -67,4 +79,4 @@ class GameSerializer(serializers.ModelSerializer):
         model = Game
         depth = 2 # INSQ: This will embed all the data the client is 
                             # looking for so that the relevant objects themselves are returned instead of just the FK ids
-        fields = ('id', 'title', 'maker', 'number_of_players', 'skill_level', 'game_type', 'gamer')
+        fields = ('id', 'title', 'maker', 'number_of_players', 'skill_level', 'game_type')
