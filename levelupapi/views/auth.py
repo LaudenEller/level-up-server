@@ -7,8 +7,8 @@ from rest_framework.response import Response
 
 from levelupapi.models import Gamer
 
-@api_view(['POST'])
-@permission_classes([AllowAny])
+@api_view(['POST']) # INSQ: What does this do?
+@permission_classes([AllowAny]) # INSQ: What does this do?
 def login_user(request):
     '''Handles the authentication of a gamer
 

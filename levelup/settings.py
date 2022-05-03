@@ -54,7 +54,7 @@ REST_FRAMEWORK = {
     ],
 }
 
-# THIS IS NEW
+# THIS IS NEW security thing, this api only accepts this list of urls.
 CORS_ORIGIN_WHITELIST = (
     'http://localhost:3000',
     'http://127.0.0.1:3000'

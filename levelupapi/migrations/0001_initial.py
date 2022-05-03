@@ -5,6 +5,7 @@ from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
 
+# creates database from models created by the user and save in db, can slightly alter data for different end-points as coder wants.
 
 class Migration(migrations.Migration):
 
