@@ -4,7 +4,6 @@ from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
 from rest_framework import serializers, status
 from levelupapi.models import Event
-from levelupapi.models.game import Game
 from levelupapi.models.gamer import Gamer
 from django.core.exceptions import ValidationError
 
@@ -15,7 +14,7 @@ class EventView(ViewSet):
     """Level up event view"""
     
     def retrieve(self, request, pk):
-        """Handle GET requests for single game type
+        """Handle GET requests for single event type
         
         Returns:
             Response -- JSON serialized event
@@ -33,7 +32,7 @@ class EventView(ViewSet):
         """Handle GET requests to get all events
         
         Returns:
-            Response -- JSON serialized list of game types
+            Response -- JSON serialized list of event types
         """
         
         event = Event.objects.all() # INSQ: This is ORM, it returns all the Event objects in the db
@@ -44,28 +43,39 @@ class EventView(ViewSet):
         """Handle POST operations
 
         Returns
-            Response -- JSON serialized game instance
+            Response -- JSON serialized event instance
         """
         
-       
         organizer = Gamer.objects.get(user=request.auth.user)
         serializer = CreateEventSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save(organizer=organizer)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
         
-        # organizer = Gamer.objects.get(user=request.auth.user)
-        # game = Game.objects.get(pk=request.data["game_id"])
+        # organizer = gamer.objects.get(user=request.auth.user)
+        # event = event.objects.get(pk=request.data["event_id"])
 
         # event = Event.objects.create(
         #     description=request.data["description"],
         #     date=request.data["date"],
         #     time=request.data["time"],
-        #     game=game,
+        #     event=event,
         #     organizer=organizer
         # )
         # serializer = EventSerializer(event)
         # return Response(serializer.data)
+        
+    def update(self, request, pk):
+        """Handle PUT requests for an event
+
+        Returns:
+            Response -- Empty body with 204 status code
+        """
+        event = Event.objects.get(pk=pk)
+        serializer = CreateEventSerializer(event, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(None, status=status.HTTP_204_NO_CONTENT)
     
 # INSQ: The EventSerializer constructs a JSON representation of the data the client requested
       
@@ -75,7 +85,7 @@ class CreateEventSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Event
-        fields = ('id', 'description', 'date', 'time', 'game')
+        fields = ('id', 'description', 'date', 'time', 'game', 'organizer_id')
         
 class EventSerializer(serializers.ModelSerializer):
     """JSON serializer for events
