@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework import serializers, status
 from levelupapi.models import  Event, Gamer, Game 
 from django.core.exceptions import ValidationError
+from rest_framework.decorators import action
 
 
 # INSQ: The EventView class parses an HTTP request and uses ORM to return the requested data
@@ -34,8 +35,12 @@ class EventView(ViewSet):
             Response -- JSON serialized list of event types
         """
         
-        event = Event.objects.all() # INSQ: This is ORM, it returns all the Event objects in the db
-        serializer = EventSerializer(event, many=True)
+        events = Event.objects.all() # INSQ: This is ORM, it returns all the Event objects in the db
+       
+        gamer = Gamer.objects.get(user=request.auth.user)
+        for event in events:
+            event.joined = gamer in event.attendees.all()
+        serializer = EventSerializer(events, many=True)
         return Response(serializer.data)
     
     def create(self, request):
@@ -89,6 +94,24 @@ class EventView(ViewSet):
         event.delete()
         return Response(None, status=status.HTTP_204_NO_CONTENT)
     
+    @action(methods=['post'], detail=True)
+    def signup(self, request, pk):
+        """Post request for a user to sign up for an event"""
+    
+        gamer = Gamer.objects.get(user=request.auth.user)
+        event = Event.objects.get(pk=pk)
+        event.attendees.add(gamer)
+        return Response({'message': 'Gamer added'}, status=status.HTTP_201_CREATED)
+    
+    @action(methods=['delete'], detail=True)
+    def leave(self, request, pk):
+        """Remove request for a user to leave an event"""
+
+        gamer = Gamer.objects.get(user=request.auth.user)
+        event = Event.objects.get(pk=pk)
+        event.attendees.remove(gamer)
+        return Response({'message': 'Gamer removed'}, status=status.HTTP_204_NO_CONTENT)
+    
 # INSQ: The EventSerializer constructs a JSON representation of the data the client requested
       
 class CreateEventSerializer(serializers.ModelSerializer):
@@ -97,7 +120,7 @@ class CreateEventSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Event
-        fields = ('id', 'description', 'date', 'time')
+        fields = ('id', 'description', 'date', 'time', 'game', 'organizer', 'attendees', 'joined')
         
 class EventSerializer(serializers.ModelSerializer):
     """JSON serializer for events
@@ -106,4 +129,4 @@ class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         depth = 2
-        fields = ('id', 'description', 'date', 'time', 'game', 'organizer')
+        fields = ('id', 'description', 'date', 'time', 'game', 'organizer', 'attendees', 'joined')
