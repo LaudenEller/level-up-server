@@ -77,6 +77,11 @@ class EventView(ViewSet):
         serializer.save()
         return Response(None, status=status.HTTP_204_NO_CONTENT)
     
+    def destroy(self, request, pk):
+        event = Event.objects.get(pk=pk)
+        event.delete()
+        return Response(None, status=status.HTTP_204_NO_CONTENT)
+    
 # INSQ: The EventSerializer constructs a JSON representation of the data the client requested
       
 class CreateEventSerializer(serializers.ModelSerializer):
@@ -85,7 +90,7 @@ class CreateEventSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Event
-        fields = ('id', 'description', 'date', 'time', 'game', 'organizer_id')
+        fields = ('id', 'description', 'date', 'time', 'game', 'organizer')
         
 class EventSerializer(serializers.ModelSerializer):
     """JSON serializer for events
@@ -94,4 +99,4 @@ class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         depth = 2
-        fields = ('id', 'description', 'date', 'time', 'game', 'organizer_id')
+        fields = ('id', 'description', 'date', 'time', 'game', 'organizer')
