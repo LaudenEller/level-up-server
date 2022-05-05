@@ -3,8 +3,7 @@ from django.http import HttpResponseServerError
 from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
 from rest_framework import serializers, status
-from levelupapi.models import Event
-from levelupapi.models.gamer import Gamer
+from levelupapi.models import  Event, Gamer, Game 
 from django.core.exceptions import ValidationError
 
 
@@ -47,9 +46,10 @@ class EventView(ViewSet):
         """
         
         organizer = Gamer.objects.get(user=request.auth.user)
+        game = Game.objects.get(pk=request.data["game"])
         serializer = CreateEventSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save(organizer=organizer)
+        serializer.save(organizer=organizer, game=game)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
         
         # organizer = gamer.objects.get(user=request.auth.user)
@@ -78,6 +78,13 @@ class EventView(ViewSet):
         return Response(None, status=status.HTTP_204_NO_CONTENT)
     
     def destroy(self, request, pk):
+        """Handle DELETE requests from an event
+
+        Args:
+            request (DELETE): Deletes selected event
+            pk (primary key): The id of the event to be deleted
+
+        """
         event = Event.objects.get(pk=pk)
         event.delete()
         return Response(None, status=status.HTTP_204_NO_CONTENT)
@@ -90,7 +97,7 @@ class CreateEventSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Event
-        fields = ('id', 'description', 'date', 'time', 'game', 'organizer')
+        fields = ('id', 'description', 'date', 'time')
         
 class EventSerializer(serializers.ModelSerializer):
     """JSON serializer for events
