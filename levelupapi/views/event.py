@@ -1,4 +1,5 @@
 """View module for handling requests about events"""
+from email.policy import default
 from django.http import HttpResponseServerError
 from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
@@ -6,10 +7,9 @@ from rest_framework import serializers, status
 from levelupapi.models import  Event, Gamer, Game 
 from django.core.exceptions import ValidationError
 from rest_framework.decorators import action
-
+from django.db.models import Count, Q
 
 # INSQ: The EventView class parses an HTTP request and uses ORM to return the requested data
-
 class EventView(ViewSet):
     """Level up event view"""
     
@@ -21,6 +21,7 @@ class EventView(ViewSet):
         """
        
         try:
+            event = Event.objects.annotate(attendee_count=Count('attendees'))
             event = Event.objects.get(pk=pk)
             serializer = EventSerializer(event)
             return Response(serializer.data)
@@ -35,11 +36,17 @@ class EventView(ViewSet):
             Response -- JSON serialized list of event types
         """
         
-        events = Event.objects.all() # INSQ: This is ORM, it returns all the Event objects in the db
-       
         gamer = Gamer.objects.get(user=request.auth.user)
-        for event in events:
-            event.joined = gamer in event.attendees.all()
+        events = Event.objects.annotate(
+            attendee_count=Count('attendees'),
+            joined=Count(
+                'attendees',
+                filter=Q(attendees=gamer)
+                )
+            ) # INSQ: This is ORM, it returns all the Event objects in the db
+       
+        # for event in events:
+        #     event.joined = gamer in event.attendees.all()
         serializer = EventSerializer(events, many=True)
         return Response(serializer.data)
     
@@ -117,16 +124,19 @@ class EventView(ViewSet):
 class CreateEventSerializer(serializers.ModelSerializer):
     """JSON serializer for events
     """
+    attendee_count = serializers.IntegerField(default=None)
     
     class Meta:
         model = Event
-        fields = ('id', 'description', 'date', 'time', 'game', 'organizer', 'attendees', 'joined')
+        fields = ('id', 'description', 'date', 'time', 'game', 'organizer', 'attendees', 'joined', 'attendee_count')
         
 class EventSerializer(serializers.ModelSerializer):
     """JSON serializer for events
     """
     
+    attendee_count = serializers.IntegerField(default=None)
+    
     class Meta:
         model = Event
         depth = 2
-        fields = ('id', 'description', 'date', 'time', 'game', 'organizer', 'attendees', 'joined')
+        fields = ('id', 'description', 'date', 'time', 'game', 'organizer', 'attendees', 'joined', 'attendee_count')

@@ -1,4 +1,5 @@
 """View module for handling requests about games"""
+from email.policy import default
 from django.http import HttpResponseServerError
 from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
@@ -7,6 +8,7 @@ from levelupapi.models import Game
 from levelupapi.models.game_type import GameType
 from levelupapi.models.gamer import Gamer
 from django.core.exceptions import ValidationError
+from django.db.models import Count
 
 class GameView(ViewSet):
     """Level up game view"""
@@ -32,7 +34,7 @@ class GameView(ViewSet):
             Response -- JSON serialized list of game types
         """
         
-        games = Game.objects.all()
+        games = Game.objects.annotate(event_count=Count('events'))
         game_type = request.query_params.get('type', None)
         if game_type is not None:
             games = games.filter(game_type_id=game_type)
@@ -103,16 +105,20 @@ class CreateGameSerializer(serializers.ModelSerializer):
     """JSON serializer for games
     """
     
+    event_count = serializers.IntegerField(default=None)
+    
     class Meta:
         model = Game
-        fields = ('id', 'title', 'maker', 'number_of_players', 'skill_level', 'game_type')
+        fields = ('id', 'title', 'maker', 'number_of_players', 'skill_level', 'game_type', 'event_count')
 
 class GameSerializer(serializers.ModelSerializer):
     """JSON serializer for games
     """
     
+    event_count = serializers.IntegerField(default=None)
+    
     class Meta:
         model = Game
         depth = 2 # INSQ: This will embed all the data the client is 
                             # looking for so that the relevant objects themselves are returned instead of just the FK ids
-        fields = ('id', 'title', 'maker', 'number_of_players', 'skill_level', 'game_type')
+        fields = ('id', 'title', 'maker', 'number_of_players', 'skill_level', 'game_type', 'event_count')
