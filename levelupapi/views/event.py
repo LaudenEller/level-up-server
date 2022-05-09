@@ -36,14 +36,14 @@ class EventView(ViewSet):
             Response -- JSON serialized list of event types
         """
         
-        gamer = Gamer.objects.get(user=request.auth.user)
+        gamer = Gamer.objects.get(user=request.auth.user) # INSQ: This is ORM, it returns all the Event objects in the db
         events = Event.objects.annotate(
             attendee_count=Count('attendees'),
             joined=Count(
                 'attendees',
                 filter=Q(attendees=gamer)
                 )
-            ) # INSQ: This is ORM, it returns all the Event objects in the db
+            )
        
         # for event in events:
         #     event.joined = gamer in event.attendees.all()
@@ -124,11 +124,10 @@ class EventView(ViewSet):
 class CreateEventSerializer(serializers.ModelSerializer):
     """JSON serializer for events
     """
-    attendee_count = serializers.IntegerField(default=None)
     
     class Meta:
         model = Event
-        fields = ('id', 'description', 'date', 'time', 'game', 'organizer', 'attendees', 'joined', 'attendee_count')
+        fields = ('id', 'description', 'date', 'time')
         
 class EventSerializer(serializers.ModelSerializer):
     """JSON serializer for events
