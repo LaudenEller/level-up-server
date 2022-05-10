@@ -22,7 +22,7 @@ from rest_framework import routers
 router = routers.DefaultRouter(trailing_slash=False)
 router.register(r'gametypes', GameTypeView, 'gametype')
 router.register(r'events', EventView, 'event')
-router.register(r'games', GameView, 'event')
+router.register(r'games', GameView, 'game')
 
 urlpatterns = [
     path('', include(router.urls)),

@@ -11,6 +11,7 @@ class Event(models.Model):
     organizer = models.ForeignKey("Gamer", on_delete=models.CASCADE)
     attendees = models.ManyToManyField("Gamer", related_name="attendees") # INSQ: does this set up an attendees column on the Gamer table?
 #    INSQ: How does this optional properties by "imported with @" method and inheritances work?
+# TODO change "attendees" to "events" at second string
 
 
     # this is an imported method (function) that adds a property === the value of the incoming value by using the .setter function
