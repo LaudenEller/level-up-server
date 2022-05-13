@@ -1,13 +1,9 @@
 """View module for handling requests about games"""
-from email.policy import default
-from django.http import HttpResponseServerError
 from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
 from rest_framework import serializers, status
 from levelupapi.models import Game
-from levelupapi.models.game_type import GameType
 from levelupapi.models.gamer import Gamer
-from django.core.exceptions import ValidationError
 from django.db.models import Count
 
 class GameView(ViewSet):
@@ -35,6 +31,8 @@ class GameView(ViewSet):
         """
         
         games = Game.objects.annotate(event_count=Count('events'))
+        # saving the value of the query parameter of the request in a new var,
+            # and passing in a default value if value = null
         game_type = request.query_params.get('type', None)
         if game_type is not None:
             games = games.filter(game_type_id=game_type)
@@ -48,23 +46,16 @@ class GameView(ViewSet):
         Returns
             Response -- JSON serialized game instance
         """
+        
         gamer = Gamer.objects.get(user=request.auth.user)
-        # game_type_id = request.data.game_type
         serializer = CreateGameSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save(gamer=gamer)
-        # serializer.save(game_type_id=game_type_id)
-        # game = Game.objects.create(
-        #     title=request.data["title"],
-        #     maker=request.data["maker"],
-        #     number_of_players=request.data["number_of_players"],
-        #     skill_level=request.data["skill_level"],
-        #     gamer=gamer,
-        #     game_type=game_type
-        # )
-        # serializer = GameSerializer(game)
+        
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     
+    
+    # BELOW IS A WAY OF INSTANTIATING MODELS WITHOUT USING SERIALIZERS
     # def update(self, request, pk):
     #     """Handle PUT requests for a game
 
@@ -92,7 +83,7 @@ class GameView(ViewSet):
         """
         game = Game.objects.get(pk=pk)
         serializer = CreateGameSerializer(game, data=request.data)
-        serializer.is_valid(raise_exception=True)
+        serializer.is_valid(raise_exception=True) # When the user's data is invalid, does this return a 400 code to the client?
         serializer.save()
         return Response(None, status=status.HTTP_204_NO_CONTENT)
     
@@ -105,20 +96,18 @@ class CreateGameSerializer(serializers.ModelSerializer):
     """JSON serializer for games
     """
     
-    event_count = serializers.IntegerField(default=None)
-    
     class Meta:
         model = Game
-        fields = ('id', 'title', 'maker', 'number_of_players', 'skill_level', 'game_type', 'event_count')
+        fields = ('id', 'title', 'maker', 'number_of_players', 'skill_level', 'game_type')
 
 class GameSerializer(serializers.ModelSerializer):
     """JSON serializer for games
     """
     
+    # When the property was annotated, it didn't specify a datatype, so we do it now
     event_count = serializers.IntegerField(default=None)
     
     class Meta:
         model = Game
-        depth = 2 # INSQ: This will embed all the data the client is 
-                            # looking for so that the relevant objects themselves are returned instead of just the FK ids
+        depth = 2 
         fields = ('id', 'title', 'maker', 'number_of_players', 'skill_level', 'game_type', 'event_count')

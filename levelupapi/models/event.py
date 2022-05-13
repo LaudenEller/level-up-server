@@ -1,5 +1,4 @@
 from django.db import models
-# from django.forms import DateField, TimeField
 import datetime
 
 class Event(models.Model):
@@ -9,10 +8,7 @@ class Event(models.Model):
     date = models.DateField(default=datetime.date.today)
     time = models.TimeField()
     organizer = models.ForeignKey("Gamer", on_delete=models.CASCADE)
-    attendees = models.ManyToManyField("Gamer", related_name="attendees") # INSQ: does this set up an attendees column on the Gamer table?
-#    INSQ: How does this optional properties by "imported with @" method and inheritances work?
-# TODO change "attendees" to "events" at second string
-
+    attendees = models.ManyToManyField("Gamer", related_name="events")
 
     # this is an imported method (function) that adds a property === the value of the incoming value by using the .setter function
     @property # Is this a getter that collects a property from the db or a creator that adds a property

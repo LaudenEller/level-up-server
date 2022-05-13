@@ -1,15 +1,12 @@
 """View module for handling requests about events"""
-from email.policy import default
-from django.http import HttpResponseServerError
 from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
 from rest_framework import serializers, status
 from levelupapi.models import  Event, Gamer, Game 
-from django.core.exceptions import ValidationError
 from rest_framework.decorators import action
 from django.db.models import Count, Q
 
-# INSQ: The EventView class parses an HTTP request and uses ORM to return the requested data
+
 class EventView(ViewSet):
     """Level up event view"""
     
@@ -36,7 +33,7 @@ class EventView(ViewSet):
             Response -- JSON serialized list of event types
         """
         
-        gamer = Gamer.objects.get(user=request.auth.user) # INSQ: This is ORM, it returns all the Event objects in the db
+        gamer = Gamer.objects.get(user=request.auth.user)
         events = Event.objects.annotate(
             attendee_count=Count('attendees'),
             joined=Count(
@@ -44,9 +41,6 @@ class EventView(ViewSet):
                 filter=Q(attendees=gamer)
                 )
             )
-       
-        # for event in events:
-        #     event.joined = gamer in event.attendees.all()
         serializer = EventSerializer(events, many=True)
         return Response(serializer.data)
     
@@ -63,19 +57,6 @@ class EventView(ViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save(organizer=organizer, game=game)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-        
-        # organizer = gamer.objects.get(user=request.auth.user)
-        # event = event.objects.get(pk=request.data["event_id"])
-
-        # event = Event.objects.create(
-        #     description=request.data["description"],
-        #     date=request.data["date"],
-        #     time=request.data["time"],
-        #     event=event,
-        #     organizer=organizer
-        # )
-        # serializer = EventSerializer(event)
-        # return Response(serializer.data)
         
     def update(self, request, pk):
         """Handle PUT requests for an event
@@ -101,12 +82,15 @@ class EventView(ViewSet):
         event.delete()
         return Response(None, status=status.HTTP_204_NO_CONTENT)
     
-    @action(methods=['post'], detail=True)
+    # This is a decorator for Post requests and detail being set to True means
+        # this extra action is only intended for this one instance of the class, not every event
+    @action(methods=['post'], detail=True) 
     def signup(self, request, pk):
         """Post request for a user to sign up for an event"""
     
         gamer = Gamer.objects.get(user=request.auth.user)
         event = Event.objects.get(pk=pk)
+        # Create rows on an event-gamer bridge table
         event.attendees.add(gamer)
         return Response({'message': 'Gamer added'}, status=status.HTTP_201_CREATED)
     
@@ -116,11 +100,9 @@ class EventView(ViewSet):
 
         gamer = Gamer.objects.get(user=request.auth.user)
         event = Event.objects.get(pk=pk)
-        event.attendees.remove(gamer)
+        event.attendees.remove(gamer) 
         return Response({'message': 'Gamer removed'}, status=status.HTTP_204_NO_CONTENT)
     
-# INSQ: The EventSerializer constructs a JSON representation of the data the client requested
-      
 class CreateEventSerializer(serializers.ModelSerializer):
     """JSON serializer for events
     """
@@ -128,6 +110,7 @@ class CreateEventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         fields = ('id', 'description', 'date', 'time')
+        
         
 class EventSerializer(serializers.ModelSerializer):
     """JSON serializer for events
