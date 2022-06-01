@@ -26,6 +26,7 @@ router.register(r'games', GameView, 'game')
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('', include('levelupreports.urls')),
     path('register', register_user),
     path('login', login_user),
     path('admin/', admin.site.urls),

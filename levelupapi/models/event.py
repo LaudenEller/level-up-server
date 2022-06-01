@@ -10,7 +10,7 @@ class Event(models.Model):
     organizer = models.ForeignKey("Gamer", on_delete=models.CASCADE)
     attendees = models.ManyToManyField("Gamer", related_name="events")
 
-    # this is an imported method (function) that adds a property === the value of the incoming value by using the .setter function
+    # this is a wrapper that adds a property === the value of the incoming value by using the .setter function
     @property # Is this a getter that collects a property from the db or a creator that adds a property
     def joined(self):
         return self.__joined
